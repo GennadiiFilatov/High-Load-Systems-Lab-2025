@@ -1,0 +1,53 @@
+﻿groups:
+  - name: flask_alerts
+    interval: 15s
+    rules:
+      # Alert if service is down
+      - alert: ServiceDown
+        expr: up{job="flask-service"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Flask service is down"
+          description: "Flask service has been unreachable for 1 minute"
+
+      # Alert for high error rate
+      - alert: HighErrorRate
+        expr: rate(http_requests_total{status=~"5.."}[5m]) > 0.05
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High error rate detected"
+          description: "Error rate is above 5% for 2 minutes"
+
+      # Alert for high latency
+      - alert: HighLatency
+        expr: histogram_quantile(0.95, rate(http_request_duration_seconds_bucket[5m])) > 1
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request latency"
+          description: "95th percentile latency exceeds 1 second"
+
+      # Alert for no traffic
+      - alert: NoTraffic
+        expr: rate(http_requests_total[5m]) == 0
+        for: 5m
+        labels:
+          severity: info
+        annotations:
+          summary: "No traffic detected"
+          description: "Service has received no requests for 5 minutes"
+
+      # Alert for too many active connections
+      - alert: TooManyActiveRequests
+        expr: http_requests_active > 50
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Too many active requests"
+          description: "More than 50 concurrent requests detected"
