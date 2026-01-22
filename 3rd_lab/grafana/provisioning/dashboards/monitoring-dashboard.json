@@ -1,0 +1,994 @@
+{
+  "annotations": {
+    "list": [
+      {
+        "builtIn": 1,
+        "datasource": "-- Grafana --",
+        "enable": true,
+        "hide": true,
+        "iconColor": "rgba(0, 211, 255, 1)",
+        "name": "Annotations & Alerts",
+        "type": "dashboard"
+      }
+    ]
+  },
+  "editable": true,
+  "gnetId": null,
+  "graphTooltip": 1,
+  "id": null,
+  "links": [],
+  "panels": [
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 0
+      },
+      "id": 100,
+      "options": {
+        "content": "# 📊 HAHL Labs 5-6: Complete Caching & Redis Performance Dashboard\n\n**Experiments:** DB Direct | Cache-Aside | Thundering Herd | TTL Config | Optimization",
+        "mode": "markdown"
+      },
+      "title": "Dashboard Overview",
+      "type": "text"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 2
+      },
+      "id": 101,
+      "options": {
+        "content": "## 🔬 Experiment 1 & 2: Database Direct vs Cache-Aside Comparison",
+        "mode": "markdown"
+      },
+      "title": "",
+      "type": "text"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 4
+      },
+      "id": 1,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "multi"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{endpoint=\"/api/products/db\"}[5m])) by (le))",
+          "legendFormat": "DB Direct P95 (Exp 1)",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{endpoint=\"/api/products/cached\"}[5m])) by (le))",
+          "legendFormat": "Cached P95 (Exp 2)",
+          "refId": "B"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{endpoint=\"/api/products/db\"}[5m])) by (le))",
+          "legendFormat": "DB Direct P50",
+          "refId": "C"
+        },
+        {
+          "expr": "histogram_quantile(0.50, sum(rate(http_request_duration_seconds_bucket{endpoint=\"/api/products/cached\"}[5m])) by (le))",
+          "legendFormat": "Cached P50",
+          "refId": "D"
+        }
+      ],
+      "title": "Request Latency: DB vs Cache (P95, P50)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 4
+      },
+      "id": 2,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "multi"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{endpoint=\"/api/products/db\"}[1m]))",
+          "legendFormat": "DB Direct RPS (Exp 1)",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(http_requests_total{endpoint=\"/api/products/cached\"}[1m]))",
+          "legendFormat": "Cached RPS (Exp 2)",
+          "refId": "B"
+        }
+      ],
+      "title": "Throughput Comparison (RPS)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 12
+      },
+      "id": 3,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "single"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(db_queries_total{endpoint=\"/api/products/cached\"}[1m]))",
+          "legendFormat": "DB Queries/sec (Cached Endpoint)",
+          "refId": "A"
+        }
+      ],
+      "title": "Database Query Load - Exp 2 (Cache-Aside)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 12
+      },
+      "id": 4,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "multi"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total{endpoint=\"/api/products/db\"}[1m]))",
+          "legendFormat": "DB Direct Requests/sec",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(http_requests_total{endpoint=\"/api/products/cached\"}[1m]))",
+          "legendFormat": "Cached Requests/sec",
+          "refId": "B"
+        }
+      ],
+      "title": "Requests Distribution: Direct vs Cached",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 12
+      },
+      "id": 5,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "single"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket[1m])) by (le))",
+          "legendFormat": "DB Query Duration P95",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(db_query_duration_seconds_bucket[1m])) by (le))",
+          "legendFormat": "DB Query Duration P99",
+          "refId": "B"
+        }
+      ],
+      "title": "Database Query Duration - All Experiments",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 20
+      },
+      "id": 102,
+      "options": {
+        "content": "## ⚡ Experiment 3: Thundering Herd Problem (Unoptimized)",
+        "mode": "markdown"
+      },
+      "title": "",
+      "type": "text"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 22
+      },
+      "id": 6,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "multi"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{endpoint=\"/api/products/cached\"}[1m])) by (le))",
+          "legendFormat": "P95 Latency (Watch for SPIKE!)",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{endpoint=\"/api/products/cached\"}[1m])) by (le))",
+          "legendFormat": "P99 Latency (Peak Spike)",
+          "refId": "B"
+        }
+      ],
+      "title": "Latency Spike During Cache Invalidation - Exp 3",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 22
+      },
+      "id": 7,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "multi"
+      },
+      "targets": [
+        {
+          "expr": "sum(http_requests_active{endpoint=\"/api/products/cached\"})",
+          "legendFormat": "Active Requests (Spike = Thundering Herd)",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(db_queries_total[1m]))",
+          "legendFormat": "Database Queries/sec",
+          "refId": "B"
+        }
+      ],
+      "title": "Active Requests & DB Load During Herd - Exp 3",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 30
+      },
+      "id": 8,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "single"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(db_query_duration_seconds_bucket[1m])) by (le))",
+          "legendFormat": "DB Query P95 (Spike During Herd)",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(db_query_duration_seconds_bucket[1m])) by (le))",
+          "legendFormat": "DB Query P99",
+          "refId": "B"
+        }
+      ],
+      "title": "Database Query Duration Spike - Exp 3",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 30
+      },
+      "id": 9,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "single"
+      },
+      "targets": [
+        {
+          "expr": "100 * (sum(rate(http_requests_total{endpoint=\"/api/products/cached\",status=~\"5..\"}[1m])) or vector(0)) / (sum(rate(http_requests_total{endpoint=\"/api/products/cached\"}[1m])) > 0) or vector(0)",
+          "legendFormat": "Error Rate % (Spike During Herd)",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(http_requests_total{endpoint=\"/api/products/cached\",status=~\"5..\"}[1m])) or vector(0)",
+          "legendFormat": "5xx Errors/sec",
+          "refId": "B"
+        }
+      ],
+      "title": "Error Rate During Thundering Herd - Exp 3",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 38
+      },
+      "id": 103,
+      "options": {
+        "content": "## ⏱️ Experiment 4: TTL Configuration (30-second periodic spikes)",
+        "mode": "markdown"
+      },
+      "title": "",
+      "type": "text"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 40
+      },
+      "id": 10,
+      "options": {
+        "legend": {
+          "calcs": ["mean"],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "single"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{endpoint=\"/api/products/cached\"}[30s])) by (le))",
+          "legendFormat": "P95 Latency (Sawtooth Pattern Every 30s)",
+          "refId": "A"
+        }
+      ],
+      "title": "Latency Sawtooth Pattern (TTL=30s) - Exp 4",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 40
+      },
+      "id": 11,
+      "options": {
+        "legend": {
+          "calcs": ["mean"],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "multi"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(db_queries_total{endpoint=\"/api/products/cached\"}[30s]))",
+          "legendFormat": "DB Queries (Periodic Spikes Every 30s)",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(http_requests_total{endpoint=\"/api/products/cached\"}[30s]))",
+          "legendFormat": "Total Requests (Periodic Pattern)",
+          "refId": "B"
+        }
+      ],
+      "title": "TTL Impact: DB Query Spikes Every 30 Seconds - Exp 4",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 48
+      },
+      "id": 104,
+      "options": {
+        "content": "## 🚀 Experiment 5: Optimization with Request Coalescing (optimized_app.py)",
+        "mode": "markdown"
+      },
+      "title": "",
+      "type": "text"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 50
+      },
+      "id": 12,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "multi"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket{endpoint=\"/api/products/cached\"}[1m])) by (le))",
+          "legendFormat": "P95 Latency (Optimized - Much Lower!)",
+          "refId": "A"
+        },
+        {
+          "expr": "histogram_quantile(0.99, sum(rate(http_request_duration_seconds_bucket{endpoint=\"/api/products/cached\"}[1m])) by (le))",
+          "legendFormat": "P99 Latency (Optimized)",
+          "refId": "B"
+        }
+      ],
+      "title": "Latency with Request Coalescing - Exp 5",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 50
+      },
+      "id": 13,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "multi"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(db_queries_total{endpoint=\"/api/products/cached\"}[1m]))",
+          "legendFormat": "DB Queries/sec (Optimized)",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(http_requests_total{endpoint=\"/api/products/cached\"}[1m]))",
+          "legendFormat": "Total Requests/sec",
+          "refId": "B"
+        }
+      ],
+      "title": "Request Coalescing: DB Load Reduction - Exp 5",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 58
+      },
+      "id": 14,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "multi"
+      },
+      "targets": [
+        {
+          "expr": "sum(http_requests_active{endpoint=\"/api/products/cached\"})",
+          "legendFormat": "Active Requests (Lower Peak with Coalescing)",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Requests During Herd (Optimized) - Exp 5",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 58
+      },
+      "id": 15,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "single"
+      },
+      "targets": [
+        {
+          "expr": "100 * (sum(rate(http_requests_total{endpoint=\"/api/products/cached\",status=~\"5..\"}[1m])) or vector(0)) / (sum(rate(http_requests_total{endpoint=\"/api/products/cached\"}[1m])) > 0) or vector(0)",
+          "legendFormat": "Error Rate % (Should be <1%)",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(http_requests_total{endpoint=\"/api/products/cached\",status=~\"5..\"}[1m])) or vector(0)",
+          "legendFormat": "5xx Errors/sec",
+          "refId": "B"
+        }
+      ],
+      "title": "Error Rate (Optimized) - Exp 5",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 66
+      },
+      "id": 105,
+      "options": {
+        "content": "## 📈 Overall System Health & Resource Utilization",
+        "mode": "markdown"
+      },
+      "title": "",
+      "type": "text"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "reqps"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 0,
+        "y": 68
+      },
+      "id": 16,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "single"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(http_requests_total[1m]))",
+          "legendFormat": "Total RPS (All Endpoints)",
+          "refId": "A"
+        }
+      ],
+      "title": "Overall Throughput (RPS)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {}
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 8,
+        "y": 68
+      },
+      "id": 17,
+      "options": {
+        "legend": {
+          "calcs": ["mean"],
+          "displayMode": "list",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "multi"
+      },
+      "targets": [
+        {
+          "expr": "sum(http_requests_active)",
+          "legendFormat": "Total Active Requests",
+          "refId": "A"
+        }
+      ],
+      "title": "Active Requests (Total)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "bytes"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 8,
+        "x": 16,
+        "y": 68
+      },
+      "id": 18,
+      "options": {
+        "legend": {
+          "calcs": ["last", "mean"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "single"
+      },
+      "targets": [
+        {
+          "expr": "sum(container_memory_usage_bytes{id=~\"/docker/.*\", id!~\".*buildkit.*|.*buildx.*\"})",
+          "legendFormat": "All Docker Containers",
+          "refId": "A"
+        },
+        {
+          "expr": "container_memory_usage_bytes{id=\"/docker\"}",
+          "legendFormat": "Docker Total",
+          "refId": "B"
+        }
+      ],
+      "title": "Container Memory Usage (Total)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percent"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 76
+      },
+      "id": 19,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "multi"
+      },
+      "targets": [
+        {
+          "expr": "100 * sum(rate(container_cpu_usage_seconds_total{id=~\"/docker/.*\", id!~\".*buildkit.*|.*buildx.*\"}[1m]))",
+          "legendFormat": "All Docker Containers CPU %",
+          "refId": "A"
+        },
+        {
+          "expr": "100 * rate(container_cpu_usage_seconds_total{id=\"/docker\"}[1m])",
+          "legendFormat": "Docker Total CPU %",
+          "refId": "B"
+        }
+      ],
+      "title": "CPU Usage (All Docker Containers)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "short"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 0,
+        "y": 84
+      },
+      "id": 21,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "sum"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "multi"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(cache_hits_total[1m]))",
+          "legendFormat": "Cache Hits/sec",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(rate(cache_misses_total[1m]))",
+          "legendFormat": "Cache Misses/sec",
+          "refId": "B"
+        }
+      ],
+      "title": "Cache Hits vs Misses Rate",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 84
+      },
+      "id": 22,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "last"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "single"
+      },
+      "targets": [
+        {
+          "expr": "sum(rate(cache_hits_total[1m])) / (sum(rate(cache_hits_total[1m])) + sum(rate(cache_misses_total[1m])))",
+          "legendFormat": "Cache Hit Ratio",
+          "refId": "A"
+        }
+      ],
+      "title": "Cache Hit Ratio (Higher = Better)",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "fieldConfig": {
+        "defaults": {
+          "custom": {},
+          "unit": "s"
+        },
+        "overrides": []
+      },
+      "gridPos": {
+        "h": 8,
+        "w": 12,
+        "x": 12,
+        "y": 76
+      },
+      "id": 20,
+      "options": {
+        "legend": {
+          "calcs": ["mean", "max"],
+          "displayMode": "table",
+          "placement": "bottom"
+        },
+        "tooltipDisplayMode": "multi"
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(http_request_duration_seconds_bucket[5m])) by (le, endpoint))",
+          "legendFormat": "P95 - {{ endpoint }}",
+          "refId": "A"
+        }
+      ],
+      "title": "All Endpoints P95 Latency",
+      "type": "timeseries"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 2,
+        "w": 24,
+        "x": 0,
+        "y": 92
+      },
+      "id": 106,
+      "options": {
+        "content": "## ℹ️ Metric Explanation\n\n**Application Metrics** (from Flask):\n- `http_request_duration_seconds_bucket` - Request latency histograms\n- `http_requests_total` - Total requests counter\n- `http_requests_active` - Active requests gauge\n- `cache_hits_total`, `cache_misses_total` - Cache performance\n- `db_queries_total`, `db_query_duration_seconds_bucket` - Database metrics\n\n**Container Metrics** (from cAdvisor):\n- `container_cpu_usage_seconds_total` - CPU usage per container\n- `container_memory_usage_bytes` - Memory usage per container\n\n**⚠️ Windows Note:** If CPU/Memory graphs are empty, cAdvisor may not work properly on Windows Docker Desktop. Try running `docker exec cadvisor cat /proc/stat` to verify. Alternative: use Docker Desktop's built-in resource monitoring.",
+        "mode": "markdown"
+      },
+      "title": "",
+      "type": "text"
+    }
+  ],
+  "refresh": "10s",
+  "schemaVersion": 27,
+  "style": "dark",
+  "tags": [
+    "hahl",
+    "caching",
+    "redis",
+    "postgresql",
+    "performance",
+    "labs-5-6"
+  ],
+  "templating": {
+    "list": []
+  },
+  "time": {
+    "from": "now-1h",
+    "to": "now"
+  },
+  "timepicker": {
+    "refresh_intervals": [
+      "5s",
+      "10s",
+      "30s",
+      "1m",
+      "5m"
+    ]
+  },
+  "timezone": "browser",
+  "title": "HAHL Labs 5-6: Complete Caching Performance Analysis",
+  "uid": "hahl_labs_56_complete",
+  "version": 1
+}

@@ -1,0 +1,33 @@
+﻿groups:
+  - name: caching_alerts
+    interval: 15s
+    rules:
+      # High cache miss rate (> 70%)
+      - alert: HighCacheMissRate
+        expr: (increase(cache_misses_total[5m]) / 
+           (increase(cache_misses_total[5m]) + increase(cache_hits_total[5m]))) > 0.7
+        for: 2m
+        annotations:
+          summary: "High cache miss rate detected"
+
+      # Database query time spike
+      - alert: SlowDatabaseQueries
+        expr: histogram_quantile(0.95, db_query_duration_seconds) > 1.0
+        for: 2m
+        annotations:
+          summary: "Database query latency exceeded 1 second"
+
+      # High error rate
+      - alert: HighErrorRate
+        expr: (increase(http_requests_total{status=~"5.."}[5m]) / 
+           increase(http_requests_total[5m])) > 0.05
+        for: 1m
+        annotations:
+          summary: "Error rate exceeded 5%"
+
+      # Container CPU usage too high
+      - alert: HighContainerCPU
+        expr: container_cpu_usage_seconds_total > 0.8
+        for: 2m
+        annotations:
+          summary: "Container CPU usage is high"
