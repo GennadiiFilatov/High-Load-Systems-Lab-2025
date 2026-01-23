@@ -1,0 +1,22 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  - job_name: 'app'
+    static_configs:
+      - targets: ['app:8000']
+
+  - job_name: 'pg-master'
+    static_configs:
+      - targets: ['pg-exporter-master:9187']
+    relabel_configs:
+      - target_label: instance
+        replacement: 'pg-master'
+
+  - job_name: 'pg-replica'
+    static_configs:
+      - targets: ['pg-exporter-replica:9187']
+    relabel_configs:
+      - target_label: instance
+        replacement: 'pg-replica'
