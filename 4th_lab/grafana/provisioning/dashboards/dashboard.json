@@ -1,0 +1,99 @@
+{
+  "annotations": {"list": []},
+  "editable": true,
+  "panels": [
+    {
+      "title": "Replication Lag (bytes)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 0},
+      "targets": [
+        {
+          "expr": "app_replication_lag_bytes",
+          "legendFormat": "Replication Lag"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "bytes", "color": {"mode": "palette-classic"}}
+      }
+    },
+    {
+      "title": "CPU Usage by Container",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 0},
+      "targets": [
+        {
+          "expr": "rate(process_cpu_seconds_total[1m]) * 100",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "percent", "color": {"mode": "palette-classic"}}
+      }
+    },
+    {
+      "title": "Requests per Second",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 8},
+      "targets": [
+        {
+          "expr": "rate(app_requests_total[1m])",
+          "legendFormat": "{{method}} {{endpoint}} → {{target}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "reqps", "color": {"mode": "palette-classic"}}
+      }
+    },
+    {
+      "title": "Read Distribution (Master vs Replica)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 8},
+      "targets": [
+        {
+          "expr": "rate(app_requests_total{endpoint=\"/read\", target=\"master\"}[1m])",
+          "legendFormat": "Master Reads"
+        },
+        {
+          "expr": "rate(app_requests_total{endpoint=\"/read\", target=\"replica\"}[1m])",
+          "legendFormat": "Replica Reads"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "reqps", "color": {"mode": "palette-classic"}}
+      }
+    },
+    {
+      "title": "Request Latency (p95)",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 0, "y": 16},
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, rate(app_request_latency_seconds_bucket[1m]))",
+          "legendFormat": "{{endpoint}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "s", "color": {"mode": "palette-classic"}}
+      }
+    },
+    {
+      "title": "PostgreSQL Connections",
+      "type": "timeseries",
+      "gridPos": {"h": 8, "w": 12, "x": 12, "y": 16},
+      "targets": [
+        {
+          "expr": "pg_stat_database_numbackends{datname=\"appdb\"}",
+          "legendFormat": "{{instance}}"
+        }
+      ],
+      "fieldConfig": {
+        "defaults": {"unit": "short", "color": {"mode": "palette-classic"}}
+      }
+    }
+  ],
+  "refresh": "5s",
+  "schemaVersion": 38,
+  "title": "Lab 7&8 - PostgreSQL Replication",
+  "uid": "lab78",
+  "time": {"from": "now-15m", "to": "now"}
+}
