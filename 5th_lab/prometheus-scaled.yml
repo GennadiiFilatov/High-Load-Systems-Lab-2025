@@ -1,0 +1,26 @@
+# Prometheus configuration for Lab 9&10 (scaled app instances)
+
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+scrape_configs:
+  # Flask Application Instances
+  - job_name: 'app'
+    static_configs:
+      - targets: 
+          - 'app-1:8000'
+          - 'app-2:8000'
+          - 'app-3:8000'
+          - 'app-4:8000'
+    metrics_path: /metrics
+
+  # Kafka Exporter - provides consumer lag metrics
+  - job_name: 'kafka-exporter'
+    static_configs:
+      - targets: ['kafka-exporter:9308']
+
+  # Prometheus self-monitoring
+  - job_name: 'prometheus'
+    static_configs:
+      - targets: ['localhost:9090']
