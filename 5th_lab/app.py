@@ -115,7 +115,7 @@ def get_kafka_producer(max_retries=10, retry_delay=3):
 
 
 def get_kafka_consumer(max_retries=10, retry_delay=3):
-    """Initialize Kafka consumer with retry logic"""
+    """Initialize Kafka consumer with retry logic and optimized polling settings"""
     global consumer
     if consumer is not None:
         return consumer
@@ -128,13 +128,20 @@ def get_kafka_consumer(max_retries=10, retry_delay=3):
                 bootstrap_servers=KAFKA_BOOTSTRAP_SERVERS,
                 value_deserializer=lambda m: json.loads(m.decode('utf-8')),
                 group_id='async_consumer_group',
-                enable_auto_commit=False,
+                enable_auto_commit=True,        # AUTO-COMMIT for near-zero lag
+                auto_commit_interval_ms=100,    # Commit every 100ms
                 auto_offset_reset='earliest',
                 api_version=(2, 0, 2),
-                max_poll_interval_ms=300000,
-                session_timeout_ms=30000
+                # MAXIMUM THROUGHPUT SETTINGS for near-zero lag:
+                max_poll_records=1000,          # Fetch up to 1000 records per poll
+                max_poll_interval_ms=300000,    # Max time between polls
+                session_timeout_ms=30000,       # Session timeout
+                fetch_min_bytes=1,              # Don't wait for more data - return immediately!
+                fetch_max_wait_ms=10,           # Ultra-low wait time (10ms instead of 500ms default)
+                fetch_max_bytes=104857600,      # 100MB max fetch size
+                max_partition_fetch_bytes=10485760,  # 10MB per partition
             )
-            logger.info(f"Kafka consumer connected, subscribed to topic: {KAFKA_TOPIC}")
+            logger.info(f"Kafka consumer connected with optimized polling settings, subscribed to topic: {KAFKA_TOPIC}")
             return consumer
         except Exception as e:
             retries += 1
@@ -146,11 +153,15 @@ def get_kafka_consumer(max_retries=10, retry_delay=3):
 
 
 def consume_messages():
-    """Background thread to consume Kafka messages"""
+    """Background thread to consume Kafka messages with maximum throughput using poll()"""
     global consumer_thread_running
     consumer_thread_running = True
     
-    logger.info("Starting Kafka consumer thread...")
+    logger.info("Starting Kafka consumer thread with MAXIMUM THROUGHPUT settings (auto-commit enabled)...")
+    
+    # Settings for near-zero lag
+    POLL_TIMEOUT_MS = 10       # Very short poll timeout for responsiveness
+    LOG_INTERVAL = 10000       # Log less frequently
     
     while consumer_thread_running:
         try:
@@ -160,37 +171,41 @@ def consume_messages():
                 time.sleep(5)
                 continue
                 
-            logger.info("Consumer ready, starting message consumption...")
+            logger.info("Consumer ready, starting MAXIMUM THROUGHPUT consumption with poll() + auto-commit...")
             
-            for message in consumer_instance:
-                if not consumer_thread_running:
-                    break
+            total_consumed = 0
+            
+            while consumer_thread_running:
+                # Use poll() for batch processing - much faster than iterator!
+                records = consumer_instance.poll(timeout_ms=POLL_TIMEOUT_MS, max_records=1000)
                 
-                try:
-                    # Process message (simulate some work)
-                    msg_value = message.value
-                    logger.info(f"[{INSTANCE_ID}] Consumed message: {msg_value}")
-                    
-                    # Simulate message processing time
-                    time.sleep(0.05)  # 50ms processing per message
-                    
-                    # Update metrics
+                if not records:
+                    continue
+                
+                # Process all records from all partitions
+                batch_count = 0
+                for topic_partition, messages in records.items():
+                    batch_count += len(messages)
+                
+                # Batch update metrics (much faster than per-message)
+                if batch_count > 0:
                     KAFKA_MESSAGES_CONSUMED.labels(
-                        topic=message.topic,
+                        topic=KAFKA_TOPIC,
                         instance=INSTANCE_ID
-                    ).inc()
+                    ).inc(batch_count)
                     
-                    # Commit offset
-                    consumer_instance.commit()
+                    total_consumed += batch_count
                     
-                except Exception as e:
-                    logger.error(f"Error processing message: {e}")
-                    KAFKA_CONSUMER_ERRORS.inc()
+                    # Auto-commit handles offsets automatically (every 100ms)
+                    
+                    # Log progress less frequently
+                    if total_consumed % LOG_INTERVAL < batch_count:
+                        logger.info(f"[{INSTANCE_ID}] Total consumed: {total_consumed} messages")
                     
         except Exception as e:
             logger.error(f"Consumer error: {e}")
             KAFKA_CONSUMER_ERRORS.inc()
-            time.sleep(5)
+            time.sleep(2)
     
     logger.info("Consumer thread stopped")
 
